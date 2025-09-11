@@ -1,6 +1,6 @@
 const User = require('../models/User')
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
 const registerUser = async (req, res) => {
@@ -87,4 +87,53 @@ const loginUser = async (req, res) => {
     }
 }
 
-module.exports = { registerUser, loginUser }
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.userInfo.userId;
+
+        // extract old and new password;
+        const { oldPassword, newPassword } = req.body;
+
+        // find the current logged user
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'User not found'
+            })
+        }
+
+        // check if the old pass is correct
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isPasswordMatch) {
+            return res.status(400).json({
+                success: false,
+                message: 'Old password is now correct. Try again.'
+            })
+        }
+
+        // hash the new password
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // update user password
+        user.password = newHashedPassword
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password changed successfully!'
+        });
+
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Some error occurred! Please try again."
+        })
+    }
+}
+
+module.exports = { registerUser, loginUser, changePassword }
