@@ -1,21 +1,35 @@
 const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 const uploadToCloudinary = async (filePath) => {
     try {
-        
-        const result = await cloudinary.uploader.upload(filePath);
-
-        return {
-            url : result.secure_url,
-            publicId: result.public_id,
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            throw new Error(`File not found: ${filePath}`);
         }
 
-    } catch (error) {
-        console.log('Error while uploading to cloudinary', error);
-        throw new Error('Error while uploading to cloudinary');
-    }
-}
+        const result = await cloudinary.uploader.upload(filePath, {
+            folder: 'ecommerce-uploads', // Optional: organize uploads in folders
+            resource_type: 'auto'
+        });
 
-module.exports= {
+        return {
+            url: result.secure_url,
+            publicId: result.public_id,
+        };
+
+    } catch (error) {
+        console.log('Error while uploading to cloudinary:', error);
+        
+        // Delete local file if it exists (cleanup on error)
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        throw new Error(`Cloudinary upload failed: ${error.message}`);
+    }
+};
+
+module.exports = {
     uploadToCloudinary,
 };
