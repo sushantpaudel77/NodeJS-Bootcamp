@@ -64,6 +64,36 @@ const fetchImagesController = async (req, res) => {
     }
 }
 
+const deleteImageController = async(req,res) => {
+    try {
+        const getCurrentIdOfImageToBeDeleted = req.params.id;
+        const userId = req.userInfo.userId;
+
+        const image = await Image.findById(getCurrentIdOfImageToBeDeleted);
+
+        if (!image) {
+            return res.status(404).json({
+                success : false,
+                message : 'Image not found'
+            })
+        }
+
+        if(image.uploadedBy.toString() !== userId) {
+            return res.status(403).json({
+                success : false,
+                message : 'You are not authorized to delete this img'
+            })
+        }
+
+     } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Some error occurred! Please try again."
+        })
+    }
+}
+
 module.exports = {
     uploadImageController,
     fetchImagesController,

@@ -87,6 +87,7 @@ const loginUser = async (req, res) => {
     }
 }
 
+
 const changePassword = async (req, res) => {
     try {
         const userId = req.userInfo.userId;
