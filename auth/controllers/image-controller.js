@@ -1,6 +1,7 @@
 const Image = require('../models/Image');
 const { uploadToCloudinary } = require('../helpers/cloudinaryHelper');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary')
 
 const uploadImageController = async (req, res) => {
     try {
@@ -55,6 +56,18 @@ const fetchImagesController = async (req, res) => {
                 data: images,
             });
         }
+
+        // delete this image first from your cloudinary storage
+        await cloudinary.uploader.destroy(image.publicId);
+
+        // delete this img form db
+        await Image.findByIdAndDelete(getCurrentIdOfImageToBeDeleted);
+
+        res.status(200).json({
+            success: true,
+            message : 'Image deleted successfully'
+        })
+
     } catch (error) {
         console.log('Upload controller error:', error);
         res.status(500).json({
@@ -97,4 +110,5 @@ const deleteImageController = async(req,res) => {
 module.exports = {
     uploadImageController,
     fetchImagesController,
+    deleteImageController,
 };
