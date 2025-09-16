@@ -2,14 +2,29 @@ const Product = require('../models/Product')
 
 const getProductsStats = async (req, res) => {
     try {
-        const result = await Product.aggregate([{
-            $match: {
-                inStock: true,
-                price: {
-                    $gte: 200
+        const result = await Product.aggregate([
+            {
+                $match: {
+                    inStock: true,
+                    price: {
+                        $gte: 200
+                    },
+                },
+            },
+            // stage 2 group documents
+            {
+                $group: {
+                    _id: "$category",
+                    avgPrice: {
+                        $avg: "$price"
+                    },
+                    count: {
+                        $sum: 1,
+                    },
                 }
-            }
-        }])
+            },
+
+        ]);
 
         res.status(200).json({
             success: true,
@@ -61,7 +76,7 @@ const insertSampleProducts = async (req, res) => {
                 price: 80,
                 inStock: false,
                 tags: ["kitchen", "drinkware", "ceramic"]
-            }
+            },
         ];
 
         const result = await Product.insertMany(sampleProducts);
@@ -78,21 +93,74 @@ const insertSampleProducts = async (req, res) => {
     }
 }
 
-const deleteAllProducts = async (req, res) => {
-  try {
-    const result = await Product.deleteMany({}); // removes all docs
+const getProductsAnalaysis = async (req, res) => {
+    try {
+        const result = await Product.aggregate([
+            {
+                $match: {
+                    category: 'Electronics'
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: {
+                        $sum: "$price"
+                    },
+                    averageprice: {
+                        $avg: "$price"
+                    },
+                    maxProductPrice: {
+                        $max: "$price"
+                    },
+                    minProductPrice: {
+                        $min: "$price"
+                    },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    totalRevenue: 1,
+                    averageprice: 1,
+                    maxProductPrice: 1,
+                    minProductPrice: 1,
+                    priceRange: {
+                        $subtract: ["$maxProductPrice", "$minProductPrice"],
+                    },
+                },
+            },
+        ])
 
-    res.status(200).json({
-      success: true,
-      message: `Deleted ${result.deletedCount} products successfully`
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({
-      success: false,
-      message: 'Some error occurred'
-    });
-  }
+        res.status(200).json({
+            success: true,
+            data: result
+        })
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: 'Some error occurred'
+        });
+    }
+}
+
+const deleteAllProducts = async (req, res) => {
+    try {
+        const result = await Product.deleteMany({}); // removes all docs
+
+        res.status(200).json({
+            success: true,
+            message: `Deleted ${result.deletedCount} products successfully`
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: 'Some error occurred'
+        });
+    }
 };
 
-module.exports = { insertSampleProducts, getProductsStats, deleteAllProducts };
+module.exports = { insertSampleProducts, getProductsStats, deleteAllProducts, getProductsAnalaysis };
