@@ -1,5 +1,7 @@
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto')
+
 
 // set multer storage
 const storage = multer.diskStorage({
@@ -7,10 +9,10 @@ const storage = multer.diskStorage({
         cb(null, "uploads/");
     },
     filename: function (req, file, cb) {
-        cb(null,
-
-            file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-        )
+        crypto.randomBytes(12, function (err, bytes) {
+            const fn = bytes.toString('hex') + path.extname(file.originalname)
+            cb(null, fn)
+        })
     }
 });
 

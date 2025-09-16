@@ -36,8 +36,30 @@ const uploadImageController = async (req, res) => {
 // Fetch all images
 const fetchImagesController = async (req, res) => {
   try {
-    const images = await Image.find({});
-    res.status(200).json({ success: true, data: images });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+    const totalImages = await Image.countDocuments();
+    const totalPages = Math.ceil(totalImages / limit);
+
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder;
+
+    const images = await Image.find().sort(sortObj).skip(skip).limit(limit);
+    if (images) {
+      res.status(200).json({
+        success: true,
+        currentpage: page,
+        totalPages: totalPages,
+        totalImages: totalImages,
+        data: images
+      });
+    }
+
   } catch (error) {
     console.log('Fetch images error:', error);
     res.status(500).json({ success: false, message: error.message || 'Something went wrong!' });
@@ -64,6 +86,7 @@ const deleteImageController = async (req, res) => {
     await Image.findByIdAndDelete(imageId);
 
     res.status(200).json({ success: true, message: 'Image deleted successfully' });
+
   } catch (error) {
     console.log('Delete image error:', error);
     res.status(500).json({ success: false, message: error.message || 'Something went wrong!' });
