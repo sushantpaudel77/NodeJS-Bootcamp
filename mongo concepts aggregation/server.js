@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-
+const productRoutes = require('./routes/product-routes')
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -14,6 +14,8 @@ mongoose
 
 // use middleware 
 app.use(express.json());
+
+app.use('/products', productRoutes);
 
 app.listen(PORT,() => {
     console.log(`Server is now running on port ${PORT}`)
