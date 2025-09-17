@@ -1,4 +1,3 @@
-// graphql/schema.js
 const { gql } = require('graphql-tag');
 
 const typeDefs = gql`
@@ -16,12 +15,20 @@ const typeDefs = gql`
   }
 
   type Mutation {
-   createProduct(
-   title: String!
-   category: String!
-   price: Float!
-   inStock: Boolean!
-   ): Product
+    createProduct(
+      title: String!
+      category: String!
+      price: Float!
+      inStock: Boolean!
+    ): Product
+    deleteProduct(id: ID!): Boolean
+    updateProduct(
+      id: ID!
+      title: String
+      category: String
+      price: Float
+      inStock: Boolean
+    ): Product
   }
 `;
 
